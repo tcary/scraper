@@ -23,7 +23,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 // If deployed use the deployed database. Otherwise use the local mongoHeadlines db
-var MONGODB_URI = processs.env.MONGODB_URI || "mongodb://localhost/myscraperdb"
+var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/myscraper"
 require("./routes/api-routes");
 
 // Database configuration with mongoose
