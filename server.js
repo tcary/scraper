@@ -3,6 +3,8 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
 var logger = require("morgan");
+var axios = require("axios");
+var cheerio = require("cheerio");
 
 // require models
 var db = require("./models");
@@ -22,25 +24,154 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // using express.statis to serve public folder as a static directory
 app.use(express.static("public"));
 
-// If deployed use the deployed database. Otherwise use the local mongoHeadlines db
-var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/myscraper"
-require("./routes/api-routes");
-
 // Database configuration with mongoose
-mongoose.Promise = Promise;
-mongoose.connect(MONGODB_URI);
+mongoose.connect("mongodb://localhost/myscraper", { useUnifiedTopology: true, useNewUrlParser: true });
+mongoose.set('useCreateIndex', true);
 
-// errors if any
-// db.on("error", function (error) {
-//     console.log("Mongoose error: ", error);
-// });
-// db.once("open", function () {
-//     console.log("Mongoose connection successful");
-// });
 
-require('./routes/api-routes')(app);
+app.get("/", function (req, res) {
+    db.Article.find({
+        saved: false
+    })
+        .then(function (dbArticle) {
+            res.render("index", {
+                articles: dbArticle
+            });
+        })
+        .catch(function (err) {
+            res.json(err);
+        })
+})
 
+app.get("/saved", function (req, res) {
+    db.Article.find({
+        saved: true
+    })
+        .populate({
+            path: "comment"
+        })
+        .then(function (dbArticle) {
+            res.render("saved", {
+                articles: dbArticle
+            })
+        })
+        .catch(function (err) {
+            res.json(err);
+        })
+})
+
+// When user visits, it automatically scrapes articles
+app.get("/scrape", function (req, res) {
+    axios.get("https://wwww.npr.org/sections/news", function (response) {
+        // load it into cheerio and save for a shorthand property
+        var $ = cheerio.load(response.data);
+        var result = {};
+
+        // grabbing divs with class of card-content
+        $("article.item").each(function (i, element) {
+
+            // add the text & href of every link and save them as properties of the result object
+            result.title = $(this)
+                .children(".item-info")
+                .children(".title")
+                .children("a")
+                .text();
+            result.link = $(this)
+                .children(".item-info")
+                .children(".title")
+                .children("a")
+                .attr("href");
+            result.type = $(this)
+                .children(".item-info")
+                .children(".slug-wrap")
+                .children(".slug")
+                .children("a")
+                .text();
+            result.image = $(this)
+                .children(".item-image")
+                .children(".imagewrap")
+                .children("a")
+                .children("img")
+                .attr("src");
+            // creating a new article using the `result` object built from scraping
+            db.Article.create(result)
+                .then(function (dbArticle) {
+                    console.log(dbArticle);
+                })
+                .catch(function (err) {
+                    res.json(err);
+                });
+
+        })
+        res.send("Scrape Complete");
+    })
+})
+
+// deleting articles on click
+app.get("/delete", function (req, res) {
+    db.Article.deleteMany({})
+        .then(function (dbArticle) {
+            res.render("index", {
+                articles: dbArticle
+            });
+        })
+        .catch(function (err) {
+            res.json(err);
+        })
+})
+
+// saving articles on click
+
+app.put("/save/:id", function (req, res) {
+    var objectID = req.params.id;
+    db.Article.findByIdAndUpdate(objectID, {
+        $set: {
+            saved: true
+        }
+    }, {
+        new: true
+    }, function (err, dbArticle) {
+        if (err) return handleError(err);
+        res.send(db.Article);
+    });
+})
+
+// pulling up comments for the specific article
+app.post("/comments/:id", function (req, res) {
+    var objectID = req.params.id;
+
+    db.Comment.create(req.body)
+        .then(function (dbComment) {
+            return db.Article.findOneAndUpdate({
+                _id: objectID
+            }, {
+                $push: {
+                    comment: dbComment._id
+                }
+            }, {
+                new: true
+            });
+        })
+        .then(function (dbArticle) {
+            res.send(dbArticle);
+        })
+        .catch(function (err) {
+            res.json(err);
+        })
+})
+
+// deleting comment
+app.get("/deletecomment/:id", function (req, res) {
+    var objectID = req.params.id;
+    db.Comment.remove({ _id: objectID })
+        .then(function (dbComment) {
+            res.send(db.Comment)
+        })
+        .catch(function (err) {
+            res.json(err);
+        })
+})
 // Listen on port 3000
-app.listen(3000, function () {
+app.listen(PORT, function () {
     console.log("App running on port 3000!");
 });
