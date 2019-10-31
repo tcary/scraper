@@ -1,0 +1,68 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">NPR News Scraper</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+        aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <div class="navbar-nav">
+            <a class="nav-item nav-link active" href="/">Home</a>
+            <a class="nav-item nav-link" href="/saved">Saved Articles</a>
+        </div>
+    </div>
+</nav>
+
+<div class="jumbotron">
+    <div class="jumbo">
+        <h1 class="display-4">NPR News Scraper</h1>
+        <p class="lead">Here are your saved articles. Choose to leave a comment.</p>
+    </div>
+</div>
+
+<div class="container">
+    <h2>SAVED ARTICLES:</h2>
+    <div class="articles-displayed">
+        {{#each articles}}
+            <div class="row mt-3 mb-3">
+                <div class="col-md-4">
+                    <h5>Article</h5>
+                    <p class="title">{{this.title}}</p>
+                    <p class="type smallDetail">{{this.type}} | </p>
+                    <a class="link smallDetail" href={{this.link}}>Read Article</a>
+                    <img src={{this.image}} class="imageComment">
+                </div>
+                <div class="col-md-4">
+                    <h5>Comments</h5>
+                    <div class="commentsSaved">
+                        {{#each this.comment}}
+                            <p class="commentNameSaved">{{this.name}}:</p>
+                            <button type="button" class="btn btn-danger btn-sm deleteComment"
+                                objectID={{this._id}}>X</button>
+                            <p class="commentMessageSaved">"{{this.message}}"</p>
+                        {{/each}}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h5>Leave a Comment</h5>
+                    <form>
+                        <div class="form-group">
+                            <label for="exampleFormControlTextarea1">Name</label>
+                            <textarea class="form-control commentName" id="{{this._id}}Name" rows="1"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleFormControlTextarea1">Comment</label>
+                            <textarea class="form-control commentMessage" id="{{this._id}}Message" rows="2"></textarea>
+                        </div>
+                    </form>
+                    <button type="button" class="btn btn-info btn-sm commentArticle"
+                        objectID={{this._id}}>Comment</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <hr>
+                </div>
+            </div>
+        {{/each}}
+    </div>
+</div>
