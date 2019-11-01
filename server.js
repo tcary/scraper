@@ -41,6 +41,7 @@ app.get("/", function (req, res) {
         .catch(function (err) {
             res.json(err);
         })
+
 })
 
 app.get("/saved", function (req, res) {
@@ -58,38 +59,40 @@ app.get("/saved", function (req, res) {
         .catch(function (err) {
             res.json(err);
         })
+
 })
 
 // When user visits, it automatically scrapes articles
 app.get("/scrape", function (req, res) {
-    axios.get("https://wwww.npr.org/sections/news", function (response) {
+    return axios.get("https://www.foxnews.com").then(function (response) {
         // load it into cheerio and save for a shorthand property
         var $ = cheerio.load(response.data);
+        console.log("W T F");
         var result = {};
 
         // grabbing divs with class of card-content
-        $("article.item").each(function (i, element) {
-
+        $("article").each(function (i, element) {
             // add the text & href of every link and save them as properties of the result object
             result.title = $(this)
-                .children(".item-info")
+                .children(".info")
+                .children(".info-header")
                 .children(".title")
                 .children("a")
                 .text();
             result.link = $(this)
-                .children(".item-info")
+                .children(".info")
+                .children(".info-header")
                 .children(".title")
                 .children("a")
                 .attr("href");
             result.type = $(this)
                 .children(".item-info")
-                .children(".slug-wrap")
-                .children(".slug")
+                .children(".content")
+                .children(".dek")
                 .children("a")
                 .text();
             result.image = $(this)
-                .children(".item-image")
-                .children(".imagewrap")
+                .children(".m")
                 .children("a")
                 .children("img")
                 .attr("src");
@@ -99,13 +102,24 @@ app.get("/scrape", function (req, res) {
                     console.log(dbArticle);
                 })
                 .catch(function (err) {
-                    res.json(err);
+                    console.log(err);
                 });
 
         })
         res.send("Scrape Complete");
     })
 })
+
+// getting all articles from db
+app.get("/articles", function (req, res) {
+    db.Article.find({})
+        .then(function (dbArticle) {
+            res.json(dbArticle);
+        })
+        .catch(function (err) {
+            res.json(err);
+        })
+});
 
 // deleting articles on click
 app.get("/delete", function (req, res) {
