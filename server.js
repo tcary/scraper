@@ -25,8 +25,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 // Database configuration with mongoose
-mongoose.connect("mongodb://localhost/myscraper", { useUnifiedTopology: true, useNewUrlParser: true });
-mongoose.set('useCreateIndex', true);
+// mongoose.connect("mongodb://localhost/myscraper", { useUnifiedTopology: true, useNewUrlParser: true });
+// mongoose.set('useCreateIndex', true);
+
+// If deployed, use the deployed database. Otherwise use the local mongoHeadlines database
+var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
+
+// Set mongoose to leverage built in JavaScript ES6 Promises
+// Connect to the Mongo DB
+mongoose.Promise = Promise;
+mongoose.connect(MONGODB_URI);
 
 
 app.get("/", function (req, res) {
@@ -67,12 +75,11 @@ app.get("/scrape", function (req, res) {
     return axios.get("https://www.foxnews.com").then(function (response) {
         // load it into cheerio and save for a shorthand property
         var $ = cheerio.load(response.data);
-        console.log("W T F");
+        // add the text & href of every link and save them as properties of the result object
         var result = {};
 
         // grabbing divs with class of card-content
         $("article").each(function (i, element) {
-            // add the text & href of every link and save them as properties of the result object
             result.title = $(this)
                 .children(".info")
                 .children(".info-header")
@@ -115,6 +122,7 @@ app.get("/articles", function (req, res) {
     db.Article.find({})
         .then(function (dbArticle) {
             res.json(dbArticle);
+            // console.log(JSON.stringify(dbArticle));
         })
         .catch(function (err) {
             res.json(err);
@@ -146,7 +154,7 @@ app.put("/save/:id", function (req, res) {
         new: true
     }, function (err, dbArticle) {
         if (err) return handleError(err);
-        res.send(db.Article);
+        res.send(dbArticle);
     });
 })
 
@@ -157,18 +165,19 @@ app.post("/comments/:id", function (req, res) {
     db.Comment.create(req.body)
         .then(function (dbComment) {
             return db.Article.findOneAndUpdate({
-                _id: objectID
+                "_id": objectID
             }, {
                 $push: {
-                    comment: dbComment._id
+                    "comment": dbComment._id
                 }
             }, {
                 new: true
             });
         })
-        .then(function (dbArticle) {
-            res.send(dbArticle);
+        .then(function (dbComment) {
+            res.send(dbComment);
         })
+        // .then(() => res.redirect('/articles'))
         .catch(function (err) {
             res.json(err);
         })
@@ -179,7 +188,7 @@ app.get("/deletecomment/:id", function (req, res) {
     var objectID = req.params.id;
     db.Comment.remove({ _id: objectID })
         .then(function (dbComment) {
-            res.send(db.Comment)
+            res.send(dbComment)
         })
         .catch(function (err) {
             res.json(err);

@@ -37,7 +37,7 @@ $(document).on("click", "#saveArticle", function (event) {
     event.preventDefault();
     var id = $(this).attr("objectID");
     $.ajax("/save/" + id, {
-        tupe: "PUT"
+        type: "PUT"
     }).then(
         function () {
             console.log("saving article");
@@ -46,27 +46,34 @@ $(document).on("click", "#saveArticle", function (event) {
     );
 })
 
+
+
 // save comment
 $(document).on("click", ".commentArticle", function (event) {
     event.preventDefault();
     var id = $(this).attr("objectID");
-    var name = $("#" + id + "Message").val();
+    // var name = $("#" + id + "Message").val();
 
-    var newComment = {
-        name: name,
-        message: message
-    }
-    console.log(newComment);
+    // var newComment = {
+    //     name: name,
+    //     message: message
+    // }
+    // console.log(newComment);
     // send post request
-    $.ajax("/comments/" + id, {
+    $.ajax({
+        url: "/comments/" + id,
         type: "POST",
-        data: newComment
-    }).then(
-        function () {
-            console.log("posting new comment");
-            window.location.href = "/saved";
+        data: {
+            name: $(".commentNameSaved").val(),
+            comment: $(".commentMessageSaved").val()
         }
-    );
+    }).then(function (data) {
+        console.log("posting new comment" + data);
+        // $("form").empty();
+        window.location.href = "/saved";
+    });
+    $(".commentNameSaved").val("");
+    $(".commentMessageSaved").val("");
 })
 
 // delete comment on click
