@@ -1,11 +1,4 @@
-// Grab the articles as a json
-$.getJSON("/articles", function (data) {
-    // For each one
-    for (var i = 0; i < data.length; i++) {
-        // Display the apropos information on the page
-        $(".articles-displayed").append("<p data-id='" + data[i]._id + "'>" + data[i].title + "<br />" + data[i].type + "<br />" + data[i].link + "<br />" + data[i].summary + "</p>");
-    }
-});
+
 // scrape button on click
 $(document).on("click", "#scrape", function (event) {
     event.preventDefault();
@@ -13,7 +6,7 @@ $(document).on("click", "#scrape", function (event) {
         type: "GET"
     }).then(
         function () {
-            console.log("Scraping website");
+            // console.log("Scraping website");
             window.location.href = "/";
         }
     );
@@ -26,7 +19,7 @@ $(document).on("click", "#deleteAll", function (event) {
         type: "GET"
     }).then(
         function () {
-            console.log("Deleting all articles");
+            // console.log("Deleting all articles");
             window.location.href = "/"
         }
     );
@@ -40,7 +33,7 @@ $(document).on("click", "#saveArticle", function (event) {
         type: "PUT"
     }).then(
         function () {
-            console.log("saving article");
+            // console.log("saving article");
             window.location.href = "/";
         }
     );
@@ -49,32 +42,62 @@ $(document).on("click", "#saveArticle", function (event) {
 
 
 // save comment
+
 $(document).on("click", ".commentArticle", function (event) {
     event.preventDefault();
     var id = $(this).attr("objectID");
-    // var name = $("#" + id + "Message").val();
+    var name = $("#" + id + "Name").val();
+    var message = $("#" + id + "Message").val();
 
-    // var newComment = {
-    //     name: name,
-    //     message: message
-    // }
-    // console.log(newComment);
-    // send post request
-    $.ajax({
-        url: "/comments/" + id,
+    var newComment = {
+        name: name,
+        message: message
+    }
+    console.log(newComment);
+    //Send the POST request.
+    $.ajax("/comments/" + id, {
         type: "POST",
-        data: {
-            name: $(".commentNameSaved").val(),
-            comment: $(".commentMessageSaved").val()
+        data: newComment
+    }).then(
+        function () {
+            console.log("posting new comment");
+            window.location.href = "/saved";
         }
-    }).then(function (data) {
-        console.log("posting new comment" + data);
-        // $("form").empty();
-        window.location.href = "/saved";
-    });
-    $(".commentNameSaved").val("");
-    $(".commentMessageSaved").val("");
+    );
 })
+
+// $(document).on("click", ".commentArticle", function (event) {
+//     event.preventDefault();
+//     var id = $(this).attr("objectID");
+//     // var name = $("#" + id + "Message").val();
+
+//     // var newComment = {
+//     //     name: name,
+//     //     message: message
+//     // }
+//     // console.log(newComment);
+//     // send post request
+
+//     console.log($("#" + id + "Name").val())
+//     var commentName = $("#" + id + "Name").val()
+//     $.ajax({
+
+//         url: "/comments/" + id,
+//         type: "POST",
+//         data: {
+//             name: commentName,
+//             comment: $(".commentMessage").val()
+//         }
+//     }).then(function (data) {
+//         console.log(" THIS IS IT");
+//         console.log(data);
+//         // console.log("posting new comment" + data);
+//         // $("#form").empty();
+//         window.location.href = "/saved";
+//     });
+//     $(".commentName").val("");
+//     $(".commentMessage").val("");
+// })
 
 // delete comment on click
 $(document).on("click", ".deleteComment", function (event) {
@@ -84,7 +107,7 @@ $(document).on("click", ".deleteComment", function (event) {
         type: "GET"
     }).then(
         function () {
-            console.log("deleting comment");
+            // console.log("deleting comment");
             window.location.href = "/saved";
         }
     )

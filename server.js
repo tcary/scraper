@@ -56,10 +56,11 @@ app.get("/saved", function (req, res) {
     db.Article.find({
         saved: true
     })
-        .populate({
-            path: "comment"
-        })
+        .populate("comment")
         .then(function (dbArticle) {
+            // console.log("LOGGING DBARTICLE");
+            console.log(dbArticle[0].comment);
+            // res.json(dbArticle)
             res.render("saved", {
                 articles: dbArticle
             })
@@ -106,28 +107,16 @@ app.get("/scrape", function (req, res) {
             // creating a new article using the `result` object built from scraping
             db.Article.create(result)
                 .then(function (dbArticle) {
-                    console.log(dbArticle);
+                    // console.log(dbArticle);
                 })
                 .catch(function (err) {
-                    console.log(err);
+                    // console.log(err);
                 });
 
         })
         res.send("Scrape Complete");
     })
 })
-
-// getting all articles from db
-app.get("/articles", function (req, res) {
-    db.Article.find({})
-        .then(function (dbArticle) {
-            res.json(dbArticle);
-            // console.log(JSON.stringify(dbArticle));
-        })
-        .catch(function (err) {
-            res.json(err);
-        })
-});
 
 // deleting articles on click
 app.get("/delete", function (req, res) {
@@ -165,23 +154,59 @@ app.post("/comments/:id", function (req, res) {
     db.Comment.create(req.body)
         .then(function (dbComment) {
             return db.Article.findOneAndUpdate({
-                "_id": objectID
+                _id: objectID
             }, {
                 $push: {
-                    "comment": dbComment._id
+                    comment: dbComment._id
                 }
             }, {
                 new: true
             });
         })
-        .then(function (dbComment) {
-            res.send(dbComment);
+        .then(function (dbArticle) {
+            res.json(dbArticle);
+            // console.log("THIS IS IT");
+            // console.log(dbArticle.comment);
+            for (var i = 0; i < dbArticle.comment.length; i++) {
+                console.log("IS a COMMENT")
+
+                console.log(dbArticle.comment[i]);
+
+                db.Article.findOne({ _id: dbArticle.comment[i] })
+                    .populate("comment")
+                    .then(function (comment) {
+                        console.log(comment)
+                        console.log("IS THE CMMENT")
+
+                        res.json(comment)
+                    })
+                    .catch(function (err) {
+                        res.json(err);
+                    })
+            }
+
         })
         // .then(() => res.redirect('/articles'))
         .catch(function (err) {
             res.json(err);
         })
 })
+
+app.get("/comments/:id", function (req, res) {
+    // TODO
+    // ====
+    // Finish the route so it finds one article using the req.params.id,
+    // and run the populate method with "note",
+    // then responds with the article with the note included
+    db.Article.findOne({ _id: req.params.id })
+        .populate("comment")
+        .then(function (dbArticle) {
+            res.json(dbArticle)
+        })
+        .catch(function (err) {
+            res.json(err);
+        })
+});
 
 // deleting comment
 app.get("/deletecomment/:id", function (req, res) {
