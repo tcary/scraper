@@ -1,6 +1,10 @@
 # scraper
+
 Latest-News
-This app scrapes the NPR News website on button click. The user then has the ability to save any of the articles displayed. The user can then leave comments on any of the saved articles and delete any of the comments as well.
+This app scrapes the Fox News website on button click.
+![ScrapedArticles](public/images/scraperArticles.png)
+The user then has the ability to save any of the articles displayed. The user can then leave comments on any of the saved articles and delete any of the comments as well.
+![SavedArticlesWithComments](public/images/scraperSaved.png)
 
 Getting Started
 to install locally run this command in your terminal
